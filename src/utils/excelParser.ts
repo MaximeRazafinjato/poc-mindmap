@@ -1,22 +1,67 @@
 import * as XLSX from 'xlsx';
 import type { Pole, Liaison, ExcelData, NodeType } from '@/types';
 
-interface RawPoleRow {
-  ID: string;
-  Nom: string;
-  Type: string;
+interface RawNodeRow {
+  id?: string;
+  ID?: string;
+  actors?: string;
+  Nom?: string;
+  type?: string;
+  Type?: string;
+  'degree.size'?: number;
 }
 
-interface RawLiaisonRow {
-  ID_Source: string;
-  ID_Cible: string;
+interface RawLinkRow {
+  from?: string;
+  ID_Source?: string;
+  to?: string;
+  ID_Cible?: string;
+  weight?: number;
 }
 
 function normalizeType(type: string): NodeType {
   const normalized = type.toLowerCase().trim();
-  if (normalized === 'theme' || normalized === 'thème') return 'theme';
-  if (normalized === 'laboratoire' || normalized === 'labo') return 'laboratoire';
-  return 'theme';
+  if (normalized === 'odd') return 'odd';
+  if (normalized === 'unité de recherche' || normalized === 'unite de recherche') return 'unite_recherche';
+  return 'unite_recherche';
+}
+
+function parseCSVContent(content: string, separator = ';'): Record<string, string>[] {
+  const lines = content.split(/\r?\n/).filter(line => line.trim());
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(separator).map(h => h.trim());
+
+  return lines.slice(1).map(line => {
+    const values = line.split(separator);
+    const row: Record<string, string> = {};
+    headers.forEach((header, index) => {
+      row[header] = values[index]?.trim() ?? '';
+    });
+    return row;
+  });
+}
+
+export async function parseCSVFiles(nodesFile: File, linksFile: File): Promise<ExcelData> {
+  const nodesContent = await nodesFile.text();
+  const linksContent = await linksFile.text();
+
+  const rawNodes = parseCSVContent(nodesContent) as unknown as RawNodeRow[];
+  const rawLinks = parseCSVContent(linksContent) as unknown as RawLinkRow[];
+
+  const poles: Pole[] = rawNodes.map(row => ({
+    id: String(row.id || '').trim(),
+    nom: String(row.actors || '').trim(),
+    type: normalizeType(row.type || '')
+  }));
+
+  const liaisons: Liaison[] = rawLinks.map(row => ({
+    source: String(row.from || '').trim(),
+    target: String(row.to || '').trim(),
+    weight: row.weight ? Number(row.weight) : undefined
+  }));
+
+  return { poles, liaisons };
 }
 
 export async function parseExcelFile(file: File): Promise<ExcelData> {
@@ -38,18 +83,19 @@ export async function parseExcelFile(file: File): Promise<ExcelData> {
   const polesSheet = workbook.Sheets[sheetNames[0]];
   const liaisonsSheet = workbook.Sheets[sheetNames[1]];
 
-  const rawPoles = XLSX.utils.sheet_to_json<RawPoleRow>(polesSheet);
-  const rawLiaisons = XLSX.utils.sheet_to_json<RawLiaisonRow>(liaisonsSheet);
+  const rawPoles = XLSX.utils.sheet_to_json<RawNodeRow>(polesSheet);
+  const rawLiaisons = XLSX.utils.sheet_to_json<RawLinkRow>(liaisonsSheet);
 
   const poles: Pole[] = rawPoles.map(row => ({
-    id: String(row.ID).trim(),
-    nom: String(row.Nom).trim(),
-    type: normalizeType(row.Type)
+    id: String(row.id || row.ID || '').trim(),
+    nom: String(row.actors || row.Nom || '').trim(),
+    type: normalizeType(row.type || row.Type || '')
   }));
 
   const liaisons: Liaison[] = rawLiaisons.map(row => ({
-    source: String(row.ID_Source).trim(),
-    target: String(row.ID_Cible).trim()
+    source: String(row.from || row.ID_Source || '').trim(),
+    target: String(row.to || row.ID_Cible || '').trim(),
+    weight: row.weight ? Number(row.weight) : undefined
   }));
 
   return { poles, liaisons };

@@ -177,7 +177,7 @@ export function SearchBar({ poles, onSelectPole }: SearchBarProps) {
                     <span
                       className={`
                         w-3 h-3 flex-shrink-0
-                        ${pole.type === 'theme' ? 'rounded-full' : 'rounded-sm'}
+                        ${pole.type === 'unite_recherche' ? 'rounded-full' : 'rounded-sm'}
                       `}
                       style={{ backgroundColor: NODE_CONFIG[pole.type].color }}
                     />

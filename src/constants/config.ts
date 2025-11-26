@@ -1,13 +1,13 @@
 export const NODE_CONFIG = {
-  theme: {
-    color: '#3B82F6',
-    shape: 'circle' as const,
-    size: 3
-  },
-  laboratoire: {
+  unite_recherche: {
     color: '#10B981',
+    shape: 'circle' as const,
+    size: 4
+  },
+  odd: {
+    color: '#3B82F6',
     shape: 'square' as const,
-    size: 3
+    size: 5
   },
   center: {
     sizeMultiplier: 1.8,

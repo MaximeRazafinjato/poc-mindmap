@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import type { ExcelData } from '@/types';
-import { parseExcelFile } from '@/utils/excelParser';
+import { parseExcelFile, parseCSVFiles } from '@/utils/excelParser';
 
 interface FileUploadProps {
   onFileLoaded: (data: ExcelData) => void;
@@ -9,10 +9,11 @@ interface FileUploadProps {
 }
 
 export function FileUpload({ onFileLoaded, isLoading, setIsLoading }: FileUploadProps) {
-  const [isDragging, setIsDragging] = useState(false);
+  const [nodesFile, setNodesFile] = useState<File | null>(null);
+  const [linksFile, setLinksFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFile = useCallback(async (file: File) => {
+  const handleExcelFile = useCallback(async (file: File) => {
     if (!file.name.match(/\.(xlsx|xls)$/i)) {
       setError('Format non supporté. Utilisez un fichier .xlsx ou .xls');
       return;
@@ -31,97 +32,121 @@ export function FileUpload({ onFileLoaded, isLoading, setIsLoading }: FileUpload
     }
   }, [onFileLoaded, setIsLoading]);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
+  const handleCSVLoad = useCallback(async (nodes: File, links: File) => {
+    setError(null);
+    setIsLoading(true);
 
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  }, [handleFile]);
+    try {
+      const data = await parseCSVFiles(nodes, links);
+      onFileLoaded(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la lecture des fichiers CSV');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [onFileLoaded, setIsLoading]);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
-
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNodesFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) handleFile(file);
-  }, [handleFile]);
+    if (file && file.name.match(/\.csv$/i)) {
+      setNodesFile(file);
+      if (linksFile) {
+        handleCSVLoad(file, linksFile);
+      }
+    }
+  }, [linksFile, handleCSVLoad]);
+
+  const handleLinksFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.name.match(/\.csv$/i)) {
+      setLinksFile(file);
+      if (nodesFile) {
+        handleCSVLoad(nodesFile, file);
+      }
+    }
+  }, [nodesFile, handleCSVLoad]);
+
+  const handleExcelInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleExcelFile(file);
+  }, [handleExcelFile]);
 
   return (
-    <div className="flex flex-col items-center justify-center p-8">
-      <div
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        className={`
-          w-full max-w-md p-8 border-2 border-dashed rounded-xl
-          transition-all duration-200 cursor-pointer
-          ${isDragging
-            ? 'border-blue-500 bg-blue-500/10'
-            : 'border-slate-600 hover:border-slate-500 bg-slate-800/50'
-          }
-        `}
-      >
-        <div className="flex flex-col items-center text-center">
-          <svg
-            className={`w-12 h-12 mb-4 ${isDragging ? 'text-blue-400' : 'text-slate-400'}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-            />
-          </svg>
-
-          {isLoading ? (
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2" />
-              <p className="text-slate-300">Lecture du fichier...</p>
+    <div className="flex flex-col items-center justify-center p-8 gap-8">
+      <div className="w-full max-w-2xl">
+        <h2 className="text-xl font-semibold text-slate-200 mb-4 text-center">Import CSV (2 fichiers)</h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div className={`p-6 border-2 border-dashed rounded-xl transition-all ${nodesFile ? 'border-green-500 bg-green-500/10' : 'border-slate-600 bg-slate-800/50'}`}>
+            <div className="flex flex-col items-center text-center">
+              <svg className={`w-8 h-8 mb-3 ${nodesFile ? 'text-green-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="text-slate-300 text-sm mb-2">Fichier Noeuds</p>
+              {nodesFile ? (
+                <p className="text-green-400 text-xs">{nodesFile.name}</p>
+              ) : (
+                <label className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg cursor-pointer transition-colors">
+                  Choisir
+                  <input type="file" accept=".csv" onChange={handleNodesFileChange} className="hidden" />
+                </label>
+              )}
             </div>
-          ) : (
-            <>
-              <p className="text-slate-300 mb-2">
-                Déposez votre fichier Excel ici
-              </p>
-              <p className="text-slate-500 text-sm mb-4">
-                ou cliquez pour parcourir
-              </p>
-              <label className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer transition-colors">
-                Choisir un fichier
-                <input
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleInputChange}
-                  className="hidden"
-                />
-              </label>
-            </>
-          )}
+          </div>
+
+          <div className={`p-6 border-2 border-dashed rounded-xl transition-all ${linksFile ? 'border-green-500 bg-green-500/10' : 'border-slate-600 bg-slate-800/50'}`}>
+            <div className="flex flex-col items-center text-center">
+              <svg className={`w-8 h-8 mb-3 ${linksFile ? 'text-green-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+              <p className="text-slate-300 text-sm mb-2">Fichier Liens</p>
+              {linksFile ? (
+                <p className="text-green-400 text-xs">{linksFile.name}</p>
+              ) : (
+                <label className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg cursor-pointer transition-colors">
+                  Choisir
+                  <input type="file" accept=".csv" onChange={handleLinksFileChange} className="hidden" />
+                </label>
+              )}
+            </div>
+          </div>
         </div>
+        <p className="text-slate-500 text-xs mt-2 text-center">
+          Noeuds: id;actors;type | Liens: from;to;weight
+        </p>
+      </div>
+
+      <div className="text-slate-500 text-sm">ou</div>
+
+      <div className="w-full max-w-md">
+        <h2 className="text-xl font-semibold text-slate-200 mb-4 text-center">Import Excel</h2>
+        <div className="p-6 border-2 border-dashed rounded-xl border-slate-600 hover:border-slate-500 bg-slate-800/50 transition-all">
+          <div className="flex flex-col items-center text-center">
+            <svg className="w-10 h-10 mb-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            {isLoading ? (
+              <div className="flex flex-col items-center">
+                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2" />
+                <p className="text-slate-300 text-sm">Lecture...</p>
+              </div>
+            ) : (
+              <label className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer transition-colors">
+                Choisir un fichier Excel
+                <input type="file" accept=".xlsx,.xls" onChange={handleExcelInputChange} className="hidden" />
+              </label>
+            )}
+          </div>
+        </div>
+        <p className="text-slate-500 text-xs mt-2 text-center">
+          Onglet 1: Noeuds | Onglet 2: Liaisons
+        </p>
       </div>
 
       {error && (
-        <div className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 text-sm">
+        <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 text-sm">
           {error}
         </div>
       )}
-
-      <div className="mt-6 text-slate-500 text-sm text-center">
-        <p className="mb-1">Format attendu :</p>
-        <p>Onglet 1 "Poles" : ID | Nom | Type</p>
-        <p>Onglet 2 "Liaisons" : ID_Source | ID_Cible</p>
-      </div>
     </div>
   );
 }

@@ -48,10 +48,10 @@ export function NavigationControls({
             <span
               className={`
                 w-3 h-3
-                ${currentNode.type === 'theme' ? 'rounded-full' : 'rounded-sm'}
+                ${currentNode.type === 'unite_recherche' ? 'rounded-full' : 'rounded-sm'}
               `}
               style={{
-                backgroundColor: currentNode.type === 'theme' ? '#3B82F6' : '#10B981'
+                backgroundColor: currentNode.type === 'unite_recherche' ? '#10B981' : '#3B82F6'
               }}
             />
             <span className="text-slate-200 font-medium">{currentNode.nom}</span>

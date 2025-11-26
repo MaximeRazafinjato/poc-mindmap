@@ -1,4 +1,4 @@
-export type NodeType = 'theme' | 'laboratoire';
+export type NodeType = 'unite_recherche' | 'odd';
 
 export interface Pole {
   id: string;
@@ -9,6 +9,7 @@ export interface Pole {
 export interface Liaison {
   source: string;
   target: string;
+  weight?: number;
 }
 
 export interface GraphNode {
@@ -16,6 +17,8 @@ export interface GraphNode {
   name: string;
   type: NodeType;
   depth?: number;
+  opacity?: number;
+  isExiting?: boolean;
   x?: number;
   y?: number;
   fx?: number;
@@ -25,6 +28,8 @@ export interface GraphNode {
 export interface GraphLink {
   source: string | GraphNode;
   target: string | GraphNode;
+  weight?: number;
+  opacity?: number;
 }
 
 export interface GraphData {

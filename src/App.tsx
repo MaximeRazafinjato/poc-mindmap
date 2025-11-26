@@ -1,12 +1,12 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import type { ExcelData, Pole, GraphNode, AdjacencyMap, PolesIndex } from '@/types';
 import { buildPolesIndex, buildAdjacencyMap, getSubgraph } from '@/utils/graphHelpers';
 import { FileUpload } from '@/components/FileUpload';
 import { SearchBar } from '@/components/SearchBar';
-import { GraphViewer } from '@/components/GraphViewer';
+import { GraphViewer, GraphViewerRef } from '@/components/GraphViewer';
 import { NavigationControls } from '@/components/NavigationControls';
 
-const DEFAULT_DEPTH = 2;
+const DEFAULT_DEPTH = 1;
 const MAX_DEPTH = 5;
 const MAX_NODES = 2000;
 
@@ -16,6 +16,8 @@ function App() {
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [depth, setDepth] = useState(DEFAULT_DEPTH);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const graphViewerRef = useRef<GraphViewerRef>(null);
 
   const polesIndex = useMemo<PolesIndex>(() => {
     if (!excelData) return new Map();
@@ -57,18 +59,42 @@ function App() {
     setCenterNodeId(pole.id);
   }, [centerNodeId]);
 
-  const handleNodeClick = useCallback((node: GraphNode) => {
-    if (node.id === centerNodeId) return;
+  const handleNodeClick = useCallback(async (node: GraphNode) => {
+    if (node.id === centerNodeId || isTransitioning) return;
+
+    setIsTransitioning(true);
+
+    await graphViewerRef.current?.zoomToNode(node);
+
     setNavigationHistory(prev => [...prev, centerNodeId!]);
     setCenterNodeId(node.id);
-  }, [centerNodeId]);
 
-  const handleGoBack = useCallback(() => {
-    if (navigationHistory.length === 0) return;
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        graphViewerRef.current?.fitGraph();
+        setIsTransitioning(false);
+      }, 150);
+    });
+  }, [centerNodeId, isTransitioning]);
+
+  const handleGoBack = useCallback(async () => {
+    if (navigationHistory.length === 0 || isTransitioning) return;
+
+    setIsTransitioning(true);
     const previousId = navigationHistory[navigationHistory.length - 1];
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+
     setNavigationHistory(prev => prev.slice(0, -1));
     setCenterNodeId(previousId);
-  }, [navigationHistory]);
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        graphViewerRef.current?.fitGraph();
+        setIsTransitioning(false);
+      }, 150);
+    });
+  }, [navigationHistory, isTransitioning]);
 
   const handleReset = useCallback(() => {
     setExcelData(null);
@@ -113,7 +139,7 @@ function App() {
             <button
               onClick={() => setDepth(d => Math.max(1, d - 1))}
               disabled={depth <= 1}
-              className="w-6 h-6 flex items-center justify-center bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 rounded transition-colors"
+              className="w-6 h-6 flex items-center justify-center bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 rounded"
             >
               -
             </button>
@@ -121,14 +147,14 @@ function App() {
             <button
               onClick={() => setDepth(d => Math.min(MAX_DEPTH, d + 1))}
               disabled={depth >= MAX_DEPTH}
-              className="w-6 h-6 flex items-center justify-center bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 rounded transition-colors"
+              className="w-6 h-6 flex items-center justify-center bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 rounded"
             >
               +
             </button>
           </div>
           <button
             onClick={handleReset}
-            className="ml-2 px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors"
+            className="ml-2 px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded"
           >
             Nouveau fichier
           </button>
@@ -172,9 +198,11 @@ function App() {
           </div>
         ) : (
           <GraphViewer
+            ref={graphViewerRef}
             graphData={graphData}
             centerNodeId={centerNodeId}
             onNodeClick={handleNodeClick}
+            isTransitioning={isTransitioning}
           />
         )}
       </main>

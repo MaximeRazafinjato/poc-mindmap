@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "Bash(npm create:*)",
+      "Bash(npm init vite@latest . -- --template react-ts --yes)",
+      "Bash(pnpm install)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

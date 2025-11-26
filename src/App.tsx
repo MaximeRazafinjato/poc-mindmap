@@ -8,7 +8,7 @@ import { NavigationControls } from '@/components/NavigationControls';
 
 const DEFAULT_DEPTH = 2;
 const MAX_DEPTH = 5;
-const MAX_NODES = 500;
+const MAX_NODES = 2000;
 
 function App() {
   const [excelData, setExcelData] = useState<ExcelData | null>(null);

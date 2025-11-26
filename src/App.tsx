@@ -6,11 +6,16 @@ import { SearchBar } from '@/components/SearchBar';
 import { GraphViewer } from '@/components/GraphViewer';
 import { NavigationControls } from '@/components/NavigationControls';
 
+const DEFAULT_DEPTH = 2;
+const MAX_DEPTH = 5;
+const MAX_NODES = 500;
+
 function App() {
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
   const [centerNodeId, setCenterNodeId] = useState<string | null>(null);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [depth, setDepth] = useState(DEFAULT_DEPTH);
 
   const polesIndex = useMemo<PolesIndex>(() => {
     if (!excelData) return new Map();
@@ -26,8 +31,8 @@ function App() {
     if (!centerNodeId || !excelData) {
       return { nodes: [], links: [] };
     }
-    return getSubgraph(centerNodeId, polesIndex, adjacencyMap);
-  }, [centerNodeId, polesIndex, adjacencyMap, excelData]);
+    return getSubgraph(centerNodeId, polesIndex, adjacencyMap, MAX_NODES, depth);
+  }, [centerNodeId, polesIndex, adjacencyMap, excelData, depth]);
 
   const currentNode = useMemo(() => {
     if (!centerNodeId) return null;
@@ -36,8 +41,13 @@ function App() {
 
   const handleFileLoaded = useCallback((data: ExcelData) => {
     setExcelData(data);
-    setCenterNodeId(null);
     setNavigationHistory([]);
+    setDepth(DEFAULT_DEPTH);
+    if (data.poles.length > 0) {
+      setCenterNodeId(data.poles[0].id);
+    } else {
+      setCenterNodeId(null);
+    }
   }, []);
 
   const handleSelectPole = useCallback((pole: Pole) => {
@@ -97,6 +107,25 @@ function App() {
           <span>{excelData.poles.length} pôles</span>
           <span>•</span>
           <span>{excelData.liaisons.length} liaisons</span>
+          <span>•</span>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400">Profondeur</span>
+            <button
+              onClick={() => setDepth(d => Math.max(1, d - 1))}
+              disabled={depth <= 1}
+              className="w-6 h-6 flex items-center justify-center bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 rounded transition-colors"
+            >
+              -
+            </button>
+            <span className="w-4 text-center text-slate-300">{depth}</span>
+            <button
+              onClick={() => setDepth(d => Math.min(MAX_DEPTH, d + 1))}
+              disabled={depth >= MAX_DEPTH}
+              className="w-6 h-6 flex items-center justify-center bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 rounded transition-colors"
+            >
+              +
+            </button>
+          </div>
           <button
             onClick={handleReset}
             className="ml-2 px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors"
@@ -161,6 +190,11 @@ function App() {
           <span className="flex items-center gap-1">
             <span className="w-3 h-3 rounded-full border-2 border-yellow-400" /> Nœud central
           </span>
+          {graphData.nodes.length > 0 && (
+            <span className="text-slate-500">
+              | {graphData.nodes.length} nœuds affichés {graphData.nodes.length >= MAX_NODES && '(limite atteinte)'}
+            </span>
+          )}
         </span>
       </footer>
     </div>

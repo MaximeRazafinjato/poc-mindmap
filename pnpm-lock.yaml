@@ -20,9 +20,6 @@ importers:
       react-force-graph-2d:
         specifier: ^1.26.3
         version: 1.29.0(react@18.3.1)
-      xlsx:
-        specifier: ^0.18.5
-        version: 0.18.5
     devDependencies:
       '@types/react':
         specifier: ^18.3.12
@@ -48,6 +45,9 @@ importers:
       vite:
         specifier: ^6.0.1
         version: 6.4.1(jiti@1.21.7)
+      xlsx:
+        specifier: ^0.18.5
+        version: 0.18.5
 
 packages:
 

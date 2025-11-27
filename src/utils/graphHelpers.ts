@@ -28,7 +28,7 @@ export function getSubgraph(
   polesIndex: PolesIndex,
   adjacencyMap: AdjacencyMap,
   maxNodes: number = GRAPH_CONFIG.maxVisibleNodes,
-  depth: number = 2
+  maxDepth: number = 2
 ): GraphData {
   const centerPole = polesIndex.get(centerId);
   if (!centerPole) {
@@ -38,22 +38,21 @@ export function getSubgraph(
   const nodeDepths = new Map<string, number>();
   nodeDepths.set(centerId, 0);
 
-  const level1Ids = adjacencyMap.get(centerId) || new Set<string>();
-  for (const id of level1Ids) {
-    if (!nodeDepths.has(id)) {
-      nodeDepths.set(id, 1);
-    }
-  }
+  let currentLevel = new Set<string>([centerId]);
 
-  if (depth >= 2) {
-    for (const level1Id of level1Ids) {
-      const level2Ids = adjacencyMap.get(level1Id) || new Set<string>();
-      for (const id of level2Ids) {
-        if (!nodeDepths.has(id)) {
-          nodeDepths.set(id, 2);
+  for (let depth = 1; depth <= maxDepth; depth++) {
+    const nextLevel = new Set<string>();
+    for (const nodeId of currentLevel) {
+      const neighbors = adjacencyMap.get(nodeId) || new Set<string>();
+      for (const neighborId of neighbors) {
+        if (!nodeDepths.has(neighborId)) {
+          nodeDepths.set(neighborId, depth);
+          nextLevel.add(neighborId);
         }
       }
     }
+    currentLevel = nextLevel;
+    if (currentLevel.size === 0) break;
   }
 
   const sortedNodes = Array.from(nodeDepths.entries())

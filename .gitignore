@@ -5,3 +5,11 @@ dist
 .env
 .env.*
 !.env.example
+
+# Data files
+*.xlsx
+*.xls
+*.csv
+
+# Claude Code
+.claude/settings.local.json

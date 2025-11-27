@@ -17,8 +17,6 @@ export interface GraphNode {
   name: string;
   type: NodeType;
   depth?: number;
-  opacity?: number;
-  isExiting?: boolean;
   x?: number;
   y?: number;
   fx?: number;
@@ -29,7 +27,6 @@ export interface GraphLink {
   source: string | GraphNode;
   target: string | GraphNode;
   weight?: number;
-  opacity?: number;
 }
 
 export interface GraphData {

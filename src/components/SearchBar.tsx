@@ -113,10 +113,9 @@ export function SearchBar({ poles, onSelectPole }: SearchBarProps) {
           onKeyDown={handleKeyDown}
           onFocus={() => setIsOpen(true)}
           placeholder="Rechercher un thème ou laboratoire..."
-          className="w-full pl-10 pr-10 py-2.5 bg-slate-800 border border-slate-700 rounded-lg
-                     text-slate-200 placeholder-slate-500
-                     focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500
-                     transition-colors"
+          className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg
+                     text-slate-800 placeholder-slate-400
+                     focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
         <button
           type="button"
@@ -124,7 +123,7 @@ export function SearchBar({ poles, onSelectPole }: SearchBarProps) {
           className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
         >
           <svg
-            className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`w-5 h-5 ${isOpen ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -135,8 +134,8 @@ export function SearchBar({ poles, onSelectPole }: SearchBarProps) {
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl overflow-hidden">
-          <div className="px-3 py-2 border-b border-slate-700 text-xs text-slate-500">
+        <div className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden">
+          <div className="px-3 py-2 border-b border-slate-200 text-xs text-slate-500">
             {filteredPoles.length} résultat{filteredPoles.length > 1 ? 's' : ''}
           </div>
 
@@ -170,8 +169,7 @@ export function SearchBar({ poles, onSelectPole }: SearchBarProps) {
                     }}
                     className={`
                       px-4 py-2 text-left flex items-center gap-3
-                      transition-colors
-                      ${isSelected ? 'bg-blue-600/30' : 'hover:bg-slate-700/50'}
+                      ${isSelected ? 'bg-blue-100' : 'hover:bg-slate-100'}
                     `}
                   >
                     <span
@@ -181,7 +179,7 @@ export function SearchBar({ poles, onSelectPole }: SearchBarProps) {
                       `}
                       style={{ backgroundColor: NODE_CONFIG[pole.type].color }}
                     />
-                    <span className="text-slate-200 truncate flex-1">{pole.nom}</span>
+                    <span className="text-slate-700 truncate flex-1">{pole.nom}</span>
                     <span className="text-xs text-slate-500 capitalize flex-shrink-0">
                       {pole.type}
                     </span>

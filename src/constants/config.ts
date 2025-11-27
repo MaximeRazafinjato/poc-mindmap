@@ -18,9 +18,9 @@ export const NODE_CONFIG = {
 
 export const GRAPH_CONFIG = {
   maxVisibleNodes: 50,
-  linkColor: '#64748B',
+  linkColor: '#94A3B8',
   linkWidth: 1,
-  backgroundColor: '#0F172A',
+  backgroundColor: '#FFFFFF',
   warmupTicks: 50,
   cooldownTime: 3000
 } as const;

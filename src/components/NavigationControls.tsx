@@ -22,15 +22,15 @@ export function NavigationControls({
     : 0;
 
   return (
-    <div className="flex items-center gap-4 p-4 bg-slate-800/80 backdrop-blur border-b border-slate-700">
+    <div className="flex items-center gap-4 p-4 bg-white/80 backdrop-blur border-b border-slate-200">
       <button
         onClick={onGoBack}
         disabled={!canGoBack}
         className={`
-          flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors
+          flex items-center gap-2 px-3 py-1.5 rounded-lg
           ${canGoBack
-            ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
-            : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+            ? 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
           }
         `}
       >
@@ -42,7 +42,7 @@ export function NavigationControls({
 
       {currentNode && (
         <div className="flex items-center gap-3">
-          <div className="h-6 w-px bg-slate-700" />
+          <div className="h-6 w-px bg-slate-300" />
 
           <div className="flex items-center gap-2">
             <span
@@ -54,7 +54,7 @@ export function NavigationControls({
                 backgroundColor: currentNode.type === 'unite_recherche' ? '#10B981' : '#3B82F6'
               }}
             />
-            <span className="text-slate-200 font-medium">{currentNode.nom}</span>
+            <span className="text-slate-700 font-medium">{currentNode.nom}</span>
             <span className="text-slate-500 text-sm">({currentNode.type})</span>
           </div>
 
@@ -71,13 +71,13 @@ export function NavigationControls({
             const pole = polesIndex.get(id);
             return (
               <span key={id} className="flex items-center gap-1">
-                {i > 0 && <span className="text-slate-600">→</span>}
+                {i > 0 && <span className="text-slate-400">→</span>}
                 <span className="truncate max-w-[100px]">{pole?.nom || id}</span>
               </span>
             );
           })}
-          <span className="text-slate-600">→</span>
-          <span className="text-blue-400">{currentNode?.nom}</span>
+          <span className="text-slate-400">→</span>
+          <span className="text-blue-600">{currentNode?.nom}</span>
         </div>
       )}
     </div>

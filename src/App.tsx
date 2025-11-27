@@ -106,7 +106,7 @@ function App() {
     return (
       <div className="h-full bg-slate-50 flex flex-col items-center justify-center">
         <h1 className="text-2xl font-bold text-slate-800 mb-8">
-          Visualisation Mindmap
+          UNR - Université de Rouen
         </h1>
         <FileUpload
           onFileLoaded={handleFileLoaded}
@@ -120,7 +120,7 @@ function App() {
   return (
     <div className="h-full bg-slate-50 flex flex-col">
       <header className="flex items-center gap-4 p-4 bg-white border-b border-slate-200 shadow-sm">
-        <h1 className="text-lg font-semibold text-slate-800">Mindmap</h1>
+        <h1 className="text-lg font-semibold text-slate-800">UNR</h1>
 
         <div className="flex-1 flex justify-center">
           <SearchBar

@@ -42,9 +42,26 @@ function parseCSVContent(content: string, separator = ';'): Record<string, strin
   });
 }
 
+async function readFileWithEncoding(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const uint8Array = new Uint8Array(buffer);
+
+  const hasUtf8Bom = uint8Array[0] === 0xEF && uint8Array[1] === 0xBB && uint8Array[2] === 0xBF;
+  if (hasUtf8Bom) {
+    return new TextDecoder('utf-8').decode(buffer);
+  }
+
+  const utf8Text = new TextDecoder('utf-8').decode(buffer);
+  if (!utf8Text.includes('�')) {
+    return utf8Text;
+  }
+
+  return new TextDecoder('windows-1252').decode(buffer);
+}
+
 export async function parseCSVFiles(nodesFile: File, linksFile: File): Promise<ExcelData> {
-  const nodesContent = await nodesFile.text();
-  const linksContent = await linksFile.text();
+  const nodesContent = await readFileWithEncoding(nodesFile);
+  const linksContent = await readFileWithEncoding(linksFile);
 
   const rawNodes = parseCSVContent(nodesContent) as unknown as RawNodeRow[];
   const rawLinks = parseCSVContent(linksContent) as unknown as RawLinkRow[];
@@ -71,7 +88,8 @@ export async function parseExcelFile(file: File): Promise<ExcelData> {
     dense: true,
     cellFormula: false,
     cellHTML: false,
-    cellStyles: false
+    cellStyles: false,
+    codepage: 65001
   });
 
   const sheetNames = workbook.SheetNames;
